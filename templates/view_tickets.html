@@ -1,0 +1,26 @@
+<h2>All Tickets</h2>
+<table border="1">
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Issue</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+
+{% for ticket in tickets %}
+<tr>
+<td>{{ ticket[0] }}</td>
+<td>{{ ticket[1] }}</td>
+<td>{{ ticket[2] }}</td>
+<td>{{ ticket[3] }}</td>
+<td>
+{% if ticket[3] == 'Open' %}
+<a href="/close/{{ ticket[0] }}">Close</a>
+{% else %}
+Closed
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</table>
