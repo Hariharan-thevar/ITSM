@@ -3,9 +3,9 @@ import sqlite3
 
 st.title("💼 ITSM Ticket Management System")
 
-# Create Database
 conn = sqlite3.connect("tickets.db")
 cursor = conn.cursor()
+
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,7 +18,6 @@ conn.commit()
 
 menu = st.sidebar.selectbox("Menu", ["Create Ticket", "View Tickets"])
 
-# Create Ticket
 if menu == "Create Ticket":
     st.subheader("Create New Ticket")
     name = st.text_input("Enter Your Name")
@@ -26,14 +25,15 @@ if menu == "Create Ticket":
 
     if st.button("Submit Ticket"):
         if name and issue:
-            cursor.execute("INSERT INTO tickets (name, issue, status) VALUES (?, ?, ?)",
-                           (name, issue, "Open"))
+            cursor.execute(
+                "INSERT INTO tickets (name, issue, status) VALUES (?, ?, ?)",
+                (name, issue, "Open")
+            )
             conn.commit()
             st.success("Ticket Created Successfully ✅")
         else:
             st.warning("Please fill all fields")
 
-# View Tickets
 if menu == "View Tickets":
     st.subheader("All Tickets")
     cursor.execute("SELECT * FROM tickets")
@@ -45,24 +45,11 @@ if menu == "View Tickets":
             st.write(f"Name: {t[1]}")
             st.write(f"Issue: {t[2]}")
             st.write(f"Status: {t[3]}")
-            if t[3] == "Open":
-                if st.button(f"Close Ticket {t[0]}"):
-                    cursor.execute("UPDATE tickets SET status='Closed' WHERE id=?", (t[0],))
-                    conn.commit()
-                    st.success(f"Ticket {t[0]} Closed")
             st.write("---")
     else:
         st.info("No tickets found")
 
-conn.close()        return redirect('/tickets')
-    return render_template('create_ticket.html')
-
-@app.route('/tickets')
-def view_tickets():
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tickets")
-    tickets = cursor.fetchall()
+conn.close()    tickets = cursor.fetchall()
     conn.close()
     return render_template('view_tickets.html', tickets=tickets)
 
