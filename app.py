@@ -104,7 +104,7 @@ elif menu == "View Bookings":
     if not df_bookings.empty:
         st.dataframe(df_bookings)
     else:
-        st.info("No bookings available.")            )
+        st.info("No bookings available.")            
             conn.commit()
             st.success("Ticket Created Successfully ✅")
         else:
