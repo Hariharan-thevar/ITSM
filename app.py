@@ -3,11 +3,11 @@ import sqlite3
 import pandas as pd
 from datetime import datetime
 
-# ---------------- Database Connection ----------------
+# ---------------- Database ----------------
 conn = sqlite3.connect("flight_booking.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# ---------------- Create Tables ----------------
+# Create Tables
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS flights (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,21 +31,14 @@ CREATE TABLE IF NOT EXISTS bookings (
 
 conn.commit()
 
-# ---------------- Page Config ----------------
 st.set_page_config(page_title="Flight Booking System", layout="wide")
 st.title("✈ Flight Booking Management System")
 
-# ---------------- Sidebar Menu ----------------
-menu = st.sidebar.selectbox(
-    "Menu",
-    ["Add Flight (Admin)", "Search & Book Flight", "View Bookings"]
-)
+menu = st.sidebar.selectbox("Menu", 
+                            ["Add Flight (Admin)", "Search & Book Flight", "View Bookings"])
 
-# ======================================================
-# 1️⃣ ADD FLIGHT (ADMIN)
-# ======================================================
+# ---------------- Add Flight ----------------
 if menu == "Add Flight (Admin)":
-
     st.subheader("➕ Add New Flight")
 
     flight_no = st.text_input("Flight Number")
@@ -56,175 +49,20 @@ if menu == "Add Flight (Admin)":
     price = st.number_input("Ticket Price", min_value=0.0)
 
     if st.button("Add Flight"):
-        if flight_no and source and destination and departure:
-            cursor.execute("""
-                INSERT INTO flights (flight_no, source, destination, departure, seats, price)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (flight_no, source, destination, departure, seats, price))
+        cursor.execute("""
+            INSERT INTO flights (flight_no, source, destination, departure, seats, price)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (flight_no, source, destination, departure, seats, price))
+        conn.commit()
+        st.success("Flight Added Successfully!")
 
-            conn.commit()
-            st.success("✅ Flight Added Successfully!")
-        else:
-            st.warning("⚠ Please fill all fields")
-
-# ======================================================
-# 2️⃣ SEARCH & BOOK FLIGHT
-# ======================================================
+# ---------------- Search & Book ----------------
 elif menu == "Search & Book Flight":
-
     st.subheader("🔎 Search Flights")
 
     df = pd.read_sql_query("SELECT * FROM flights", conn)
 
     if not df.empty:
-
-        st.dataframe(df)
-
-        flight_ids = df["id"].tolist()
-        selected_flight = st.selectbox("Select Flight ID", flight_ids)
-        passenger_name = st.text_input("Passenger Name")
-
-        if st.button("Book Ticket"):
-
-            if passenger_name:
-
-                cursor.execute(
-                    "SELECT seats FROM flights WHERE id=?",
-                    (selected_flight,)
-                )
-
-                available_seats = cursor.fetchone()[0]
-
-                if available_seats > 0:
-
-                    # Insert booking
-                    cursor.execute("""
-                        INSERT INTO bookings (flight_id, passenger_name, booking_date)
-                        VALUES (?, ?, ?)
-                    """, (
-                        selected_flight,
-                        passenger_name,
-                        datetime.now().strftime("%Y-%m-%d %H:%M")
-                    ))
-
-                    # Reduce seat count
-                    cursor.execute("""
-                        UPDATE flights
-                        SET seats = seats - 1
-                        WHERE id=?
-                    """, (selected_flight,))
-
-                    conn.commit()
-                    st.success("🎉 Ticket Booked Successfully!")
-
-                else:
-                    st.error("❌ No Seats Available")
-
-            else:
-                st.warning("⚠ Please enter passenger name")
-
-    else:
-        st.info("No flights available.")
-
-# ======================================================
-# 3️⃣ VIEW BOOKINGS
-# ======================================================
-elif menu == "View Bookings":
-
-    st.subheader("📋 All Bookings")
-
-    df_bookings = pd.read_sql_query("""
-        SELECT bookings.id,
-               flights.flight_no,
-               flights.source,
-               flights.destination,
-               passenger_name,
-               booking_date
-        FROM bookings
-        JOIN flights ON bookings.flight_id = flights.id
-    """, conn)
-
-    if not df_bookings.empty:
-        st.dataframe(df_bookings)
-    else:
-        st.info("No bookings available.")
-
-# ---------------- Close Connection ----------------
-conn.close()    if not df.empty:
-
-        st.dataframe(df)
-
-        flight_ids = df["id"].tolist()
-        selected_flight = st.selectbox("Select Flight ID", flight_ids)
-        passenger_name = st.text_input("Passenger Name")
-
-        if st.button("Book Ticket"):
-
-            if passenger_name:
-
-                cursor.execute(
-                    "SELECT seats FROM flights WHERE id=?",
-                    (selected_flight,)
-                )
-
-                available_seats = cursor.fetchone()[0]
-
-                if available_seats > 0:
-
-                    # Insert booking
-                    cursor.execute("""
-                        INSERT INTO bookings (flight_id, passenger_name, booking_date)
-                        VALUES (?, ?, ?)
-                    """, (
-                        selected_flight,
-                        passenger_name,
-                        datetime.now().strftime("%Y-%m-%d %H:%M")
-                    ))
-
-                    # Reduce seat count
-                    cursor.execute("""
-                        UPDATE flights
-                        SET seats = seats - 1
-                        WHERE id=?
-                    """, (selected_flight,))
-
-                    conn.commit()
-                    st.success("🎉 Ticket Booked Successfully!")
-
-                else:
-                    st.error("❌ No Seats Available")
-
-            else:
-                st.warning("⚠ Please enter passenger name")
-
-    else:
-        st.info("No flights available.")
-
-# ======================================================
-# 3️⃣ VIEW BOOKINGS
-# ======================================================
-elif menu == "View Bookings":
-
-    st.subheader("📋 All Bookings")
-
-    df_bookings = pd.read_sql_query("""
-        SELECT bookings.id,
-               flights.flight_no,
-               flights.source,
-               flights.destination,
-               passenger_name,
-               booking_date
-        FROM bookings
-        JOIN flights ON bookings.flight_id = flights.id
-    """, conn)
-
-    if not df_bookings.empty:
-        st.dataframe(df_bookings)
-    else:
-        st.info("No bookings available.")
-
-# ---------------- Close Connection ----------------
-conn.close()    if not df.empty:
         st.dataframe(df)
 
         flight_ids = df["id"].tolist()
@@ -266,29 +104,4 @@ elif menu == "View Bookings":
     if not df_bookings.empty:
         st.dataframe(df_bookings)
     else:
-        st.info("No bookings available.")            
-            conn.commit()
-            st.success("Ticket Created Successfully ✅")
-        else:
-            st.warning("Please fill all fields")
-
-# -----------------------
-# View Tickets
-# -----------------------
-if menu == "View Tickets":
-    st.subheader("All Tickets")
-    cursor.execute("SELECT * FROM tickets")
-    tickets = cursor.fetchall()
-
-    if tickets:
-        for t in tickets:
-            st.write(f"**ID:** {t[0]}")
-            st.write(f"Name: {t[1]}")
-            st.write(f"Issue: {t[2]}")
-            st.write(f"Status: {t[3]}")
-            st.write("---")
-    else:
-        st.info("No tickets found")
-
-conn.close()if __name__ == '__main__':
-    app.run(debug=True)
+        st.info("No bookings available.")
