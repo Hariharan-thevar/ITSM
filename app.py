@@ -3,9 +3,11 @@ import sqlite3
 
 st.title("💼 ITSM Ticket Management System")
 
+# Connect to database
 conn = sqlite3.connect("tickets.db")
 cursor = conn.cursor()
 
+# Create table
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,8 +18,12 @@ CREATE TABLE IF NOT EXISTS tickets (
 """)
 conn.commit()
 
+# Sidebar Menu
 menu = st.sidebar.selectbox("Menu", ["Create Ticket", "View Tickets"])
 
+# -----------------------
+# Create Ticket
+# -----------------------
 if menu == "Create Ticket":
     st.subheader("Create New Ticket")
     name = st.text_input("Enter Your Name")
@@ -34,6 +40,9 @@ if menu == "Create Ticket":
         else:
             st.warning("Please fill all fields")
 
+# -----------------------
+# View Tickets
+# -----------------------
 if menu == "View Tickets":
     st.subheader("All Tickets")
     cursor.execute("SELECT * FROM tickets")
@@ -49,18 +58,5 @@ if menu == "View Tickets":
     else:
         st.info("No tickets found")
 
-conn.close()    tickets = cursor.fetchall()
-    conn.close()
-    return render_template('view_tickets.html', tickets=tickets)
-
-@app.route('/close/<int:id>')
-def close_ticket(id):
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute("UPDATE tickets SET status='Closed' WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
-    return redirect('/tickets')
-
-if __name__ == '__main__':
+conn.close()if __name__ == '__main__':
     app.run(debug=True)
